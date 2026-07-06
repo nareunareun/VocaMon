@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>#단어습득하는몬스터 — 디자인 가이드</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.9/static/pretendard.min.css">
+<style>
+  /* ══════════════════════════════════════════════════════════
+     디자인 토큰 — VocaMon.html의 :root와 반드시 동일하게 유지.
+     값을 바꾸고 싶으면 두 파일의 :root를 함께 수정한다.
+     ══════════════════════════════════════════════════════════ */
+  :root{
+    /* 색상: 바탕·글자 */
+    --bg:#FCFAF7; --card:#FFFFFF; --ink:#4B4B55; --muted:#A3A3AE; --line:#F0EBE4;
+    /* 색상: 파스텔 (연한 톤=배경, 진한 톤=글자) */
+    --pink:#F7C8D9; --pink-soft:#FBE3EC; --rose:#C2506B;
+    --mint:#C4E8D2; --mint-soft:#E2F5EA; --grn:#27835A;
+    --lav:#EAE3FC; --lav-soft:#EDE7FB; --pur:#A896FF;
+    --blue:#C6DCF3; --blue-soft:#E4EFFA; --bl:#4B6C96;
+    --gold:#F5B940;
+    /* 글자: 크기 4단계 + 굵기 2단계 */
+    --fs-sm:13px; --fs-base:15px; --fs-lg:19px; --fs-xl:26px;
+    --fw-base:400; --fw-bold:700;
+    /* 모양 */
+    --r-card:24px; --r-btn:18px; --r-chip:999px;
+    --shadow:0 6px 20px rgba(150,120,110,.10);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-weight:var(--fw-base)}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard Variable",Pretendard,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    font-size:var(--fs-base); line-height:1.6; padding:30px 18px 60px;
+  }
+  h1,h2,h3,h4{font-size:inherit;font-weight:var(--fw-base)}
+  b,strong{font-weight:var(--fw-bold)}
+  .wrap{max-width:560px;margin:0 auto}
+  h1{color:var(--muted);margin-bottom:4px}
+  .desc{color:var(--muted);margin-bottom:24px}
+  section{background:var(--card);border-radius:var(--r-card);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+  section h2{font-size:var(--fs-sm);font-weight:var(--fw-bold);color:var(--pur);margin-bottom:14px}
+  .rule{color:var(--muted);margin-top:12px;line-height:1.7}
+  code{background:#F7F3EE;border-radius:6px;padding:1px 6px;color:var(--pur)}
+
+  /* 색상 표 */
+  .swrow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+  .swrow:last-child{border-bottom:0}
+  .sw{width:44px;height:28px;border-radius:8px;border:1px solid var(--line);flex:0 0 auto}
+  .swrow .nm{width:110px;color:var(--pur)}
+  .swrow .use{color:var(--muted);flex:1}
+
+  /* 컴포넌트 샘플 (앱과 동일 스타일) */
+  .sample{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 4px}
+  .lbl{color:var(--muted);margin-top:14px}
+  .btn{border:0;border-radius:var(--r-btn);padding:14px 16px;cursor:pointer;background:var(--lav);color:var(--pur)}
+  .btn.ghost{background:#F3EFE9;color:var(--muted)}
+  .btn.danger{background:var(--pink-soft);color:var(--rose)}
+  .btn.ok{background:var(--mint-soft);color:var(--grn)}
+  .chip{border:0;background:#F3EFE9;color:var(--muted);border-radius:var(--r-chip);padding:8px 15px;cursor:pointer}
+  .chip.on{background:var(--lav);color:var(--pur)}
+  .chip.idm{background:var(--pink-soft);color:#D093A9}
+  .chip.idm.on{background:var(--pink);color:var(--rose)}
+  .pos{display:inline-block;background:var(--blue-soft);color:var(--bl);border-radius:var(--r-chip);padding:2px 10px}
+  .pos.idiom{background:var(--pink-soft);color:var(--rose)}
+  .stars{display:inline-flex}
+  .stars span{color:#E4DFD8;padding:0 2px}
+  .stars span.on{color:var(--gold)}
+  .starcy{color:var(--gold);letter-spacing:1px}
+  .mem{display:inline-flex;align-items:center;justify-content:center;background:#F3EFE9;font-size:calc(var(--fs-sm)*.85);
+    border-radius:var(--r-chip);width:30px;height:30px;padding:1px 1px 0 0;color:transparent;text-shadow:0 0 0 var(--muted)}
+  .mem.on{background:var(--mint-soft);text-shadow:0 0 0 var(--grn)}
+  .inp{width:100%;border:1.5px solid transparent;border-radius:14px;padding:11px 13px;background:#F7F3EE;color:var(--ink);font:inherit}
+  .inp.focus{border-color:var(--pur);background:#fff}
+  .spk{display:inline-flex;align-items:center;justify-content:center;border:0;background:var(--blue-soft);color:var(--bl);
+    border-radius:var(--r-chip);width:30px;height:30px}
+  table{width:100%;border-collapse:collapse}
+  td,th{text-align:left;padding:6px 4px;border-bottom:1px solid var(--line);color:var(--ink)}
+  th{color:var(--muted)}
+  td:first-child{color:var(--pur)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>#단어습득하는몬스터 — 디자인 가이드</h1>
+  <div class="desc">파스텔 톤 + 둥근 박스. 모든 값은 <code>:root</code> 디자인 토큰에서만 가져다 쓴다.</div>
+
+  <section>
+    <h2>1. 글자</h2>
+    <table>
+      <tr><th>토큰</th><th>값</th><th>용도</th></tr>
+      <tr><td>--fs-sm</td><td>13px</td><td>보조 — 설명(힌트), 폼 라벨, 섹션 제목, 분류 태그, 목록의 뜻 줄</td></tr>
+      <tr><td>--fs-base</td><td>15px</td><td>본문 — 기본 글자, 버튼, 입력창, 목록의 단어</td></tr>
+      <tr><td>--fs-lg</td><td>19px</td><td>강조 — 테스트의 한국어 질문·정답 뜻</td></tr>
+      <tr><td>--fs-xl</td><td>26px</td><td>최상위 — 테스트의 영어 단어, 결과 %, 별점 입력</td></tr>
+      <tr><td>--fw-base</td><td>400</td><td>기본 굵기</td></tr>
+      <tr><td>--fw-bold</td><td>700</td><td>강조 굵기 — 제목, 버튼, 단어, 정답, 라벨</td></tr>
+    </table>
+    <div class="rule">
+      · 서체는 <b>Pretendard</b> 하나만 사용.<br>
+      · 크기·굵기 값을 요소에 직접 쓰지 않는다. 반드시 위 토큰만 참조하고,
+      새 단계가 필요하면 토큰을 먼저 추가한다.<br>
+      · 원칙: 화면당 <b>xl은 한 곳</b>(가장 중요한 것)에만, 보조 정보는 sm + <code>--muted</code> 색.<br>
+      · 섹션 제목은 폼 라벨과 같은 sm+bold로 하되 <code>--pur</code> 색으로만 구분한다.
+      앱 이름은 폼 라벨과 완전히 동일(<code>--muted</code>).
+      한글에는 <b>자간(letter-spacing)을 벌리지 않는다</b>.<br>
+      · 이모지는 같은 크기의 글자보다 커 보이므로 <code>calc(토큰 × .85)</code>로 광학 보정한다.
+    </div>
+  </section>
+
+  <section>
+    <h2>2. 색상</h2>
+    <div class="swrow"><div class="sw" style="background:var(--bg)"></div><div class="nm">--bg</div><div class="use">앱 바탕</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--card)"></div><div class="nm">--card</div><div class="use">카드·탭바 배경</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--ink)"></div><div class="nm">--ink</div><div class="use">기본 글자</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--muted)"></div><div class="nm">--muted</div><div class="use">보조 글자 (설명·라벨·비활성)</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--line)"></div><div class="nm">--line</div><div class="use">구분선</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--lav)"></div><div class="nm">--lav / -soft / --pur</div><div class="use">보라 — 주요 동작(시작·저장), 선택 상태</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--mint)"></div><div class="nm">--mint / -soft / --grn</div><div class="use">초록 — 정답, 암기 O, 긍정</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--pink)"></div><div class="nm">--pink / -soft / --rose</div><div class="use">분홍 — 오답, 삭제, 숙어</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--blue)"></div><div class="nm">--blue / -soft / --bl</div><div class="use">파랑 — 분류 태그, 발음 버튼, 정보성</div></div>
+    <div class="swrow"><div class="sw" style="background:var(--gold)"></div><div class="nm">--gold</div><div class="use">중요도 별</div></div>
+    <div class="rule">· 규칙: 배경은 연한 톤(<code>--lav</code>, <code>--*-soft</code>), 글자는 같은 계열의 진한 톤(<code>--pur</code> 등). 다른 조합 금지.</div>
+  </section>
+
+  <section>
+    <h2>3. 모양</h2>
+    <table>
+      <tr><th>토큰</th><th>값</th><th>용도</th></tr>
+      <tr><td>--r-card</td><td>24px</td><td>카드, 문제 카드</td></tr>
+      <tr><td>--r-btn</td><td>18px</td><td>큰 버튼, 객관식 보기</td></tr>
+      <tr><td>--r-chip</td><td>999px</td><td>칩·태그·원형 버튼 (완전 둥글게)</td></tr>
+      <tr><td>--shadow</td><td>연한 그림자</td><td>카드·탭바 공통</td></tr>
+    </table>
+    <div class="rule">· 카드 안쪽 여백 20px, 카드 사이 14px, 폼 라벨 위 14px / 아래 6px.</div>
+  </section>
+
+  <section>
+    <h2>4. 컴포넌트</h2>
+    <div class="lbl">버튼 — 주요 / 보조 / 위험 / 긍정</div>
+    <div class="sample">
+      <button class="btn" style="width:auto">테스트 시작</button>
+      <button class="btn ghost" style="width:auto">보조 동작</button>
+      <button class="btn danger" style="width:auto">삭제</button>
+      <button class="btn ok" style="width:auto">맞았어</button>
+    </div>
+    <div class="lbl">칩(선택 버튼) — 기본 / 선택됨 / 숙어 / 숙어 선택됨</div>
+    <div class="sample">
+      <span class="chip">명사</span><span class="chip on">동사</span>
+      <span class="chip idm">숙어</span><span class="chip idm on">숙어</span>
+    </div>
+    <div class="lbl">분류 태그 — 일반 분류는 파랑, 숙어만 분홍</div>
+    <div class="sample"><span class="pos">명사</span><span class="pos">형용사</span><span class="pos idiom">숙어</span></div>
+    <div class="lbl">중요도 별 — 입력은 회색 별 채우기, 목록 표시는 노란 별만</div>
+    <div class="sample">
+      <span class="stars"><span class="on">★</span><span class="on">★</span><span>★</span></span>
+      <span class="starcy">★★</span>
+    </div>
+    <div class="lbl">암기 ⭕ / 미암기 ❌ · 발음 버튼 — 이모지는 <code>color:transparent + text-shadow</code>로 토큰 색을 입힌다</div>
+    <div class="sample"><span class="mem on">⭕</span><span class="mem">❌</span><span class="spk">🔊</span></div>
+    <div class="lbl">입력창 — 기본 / 포커스</div>
+    <div class="sample" style="flex-direction:column;align-items:stretch">
+      <input class="inp" placeholder="기본 상태" readonly>
+      <input class="inp focus" placeholder="포커스 상태 (--pur 테두리 + 흰 배경)" readonly>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. 사용 규칙 요약</h2>
+    <div class="rule" style="margin-top:0">
+      1. 색·크기·둥글기 값을 코드에 직접 쓰지 말고 반드시 토큰을 참조한다.<br>
+      2. 토큰 값을 바꿀 때는 <code>VocaMon.html</code>과 이 파일의 <code>:root</code>를 함께 수정한다.<br>
+      3. 새 요소가 필요하면 이 가이드의 기존 컴포넌트를 먼저 재사용한다.<br>
+      4. 분류는 문제(질문)에는 숨기고 정답에만 표시한다.<br>
+      5. 분류별 뜻은 구분 기호 없이 <span class="pos">명사</span> 내용물&nbsp;&nbsp;<span class="pos">형용사</span> 만족한 처럼 태그로만 구분해 나열한다.
+    </div>
+  </section>
+</div>
+</body>
+</html>
