@@ -1,7 +1,7 @@
 /* 오프라인 지원 서비스 워커 — 네트워크 우선, 실패하면 캐시 사용.
    온라인이면 항상 최신 버전을 받아오므로 배포(푸시) 즉시 반영된다. */
 "use strict";
-const CACHE = "vocamon-v1";
+const CACHE = "vocamon-v2";
 
 self.addEventListener("install", e => {
   e.waitUntil(
