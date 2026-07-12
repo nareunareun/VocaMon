@@ -261,7 +261,7 @@ const posListOf = w => [...new Set(senseList(w).map(s=>s.pos).filter(Boolean))];
 /* 불러온 데이터(저장본·백업 파일)의 형식 보정 — 손으로 편집한 백업도 안전하게 */
 function migrate(words){
   return (words||[]).filter(w=> w && typeof w==="object" && w.word).map(w=>{
-    if(!w.id) w.id = uid();
+    w.id = w.id ? String(w.id) : uid(); // 손으로 고친 백업의 숫자 id도 문자열로 통일
     if(!Array.isArray(w.senses)) w.senses = [];
     w.senses = w.senses.filter(s=>s && typeof s.meaning==="string");
     w.imp = Math.min(3, Math.max(1, w.imp||2));
@@ -579,13 +579,19 @@ function renderTest(){
       if(!ses.choices || ses.choiceFor!==w.id){
         const val = x => ses.dir==="e2k" ? meaningStr(x) : x.word;
         const cands = data.words.filter(x=>x.id!==w.id && val(x)!==val(w));
+        // 우선순위 순서에서 앞에서부터 3개 — 같은 뜻/철자는 한 번만 (보기 중복 방지)
+        const pickUnique = list => {
+          const seen = new Set(), out = [];
+          for(const x of list){ const v = val(x);
+            if(!seen.has(v)){ seen.add(v); out.push(v); if(out.length===3) break; } }
+          return out;
+        };
         let others;
         if(ses.dir==="k2e"){
           // 한→영: 철자가 비슷한 단어를 오답 보기로 우선 사용
-          others = shuffle(cands)
+          others = pickUnique(shuffle(cands)
             .sort((a,b)=> editDist(a.word.toLowerCase(), w.word.toLowerCase())
-                        - editDist(b.word.toLowerCase(), w.word.toLowerCase()))
-            .slice(0,3).map(val);
+                        - editDist(b.word.toLowerCase(), w.word.toLowerCase())));
         }else{
           // 영→한: 같은 분류의 단어를 오답 보기로 우선 사용 (분류만으로 답이 드러나지 않게)
           const tpos = posListOf(w);
@@ -593,8 +599,7 @@ function renderTest(){
             const xp = posListOf(x);
             return tpos.length ? xp.some(p=>tpos.includes(p)) : xp.length===0;
           };
-          others = [...shuffle(cands.filter(shares)), ...shuffle(cands.filter(x=>!shares(x)))]
-            .slice(0,3).map(val);
+          others = pickUnique([...shuffle(cands.filter(shares)), ...shuffle(cands.filter(x=>!shares(x)))]);
         }
         ses.choices = shuffle([val(w), ...others]); ses.choiceFor = w.id;
       }
@@ -716,10 +721,10 @@ function renderWords(){
         <span class="starcy" title="중요도 (수정은 ✎에서)">${starTxt(w.imp)}</span>
         ${lines}
       </div>
-      <button class="mem ${w.mem?"on":""}" data-mem="${w.id}" title="${w.mem?"암기함":"미암기"} (누르면 바뀜)">${w.mem?"⭕":"❌"}</button>
+      <button class="mem ${w.mem?"on":""}" data-mem="${esc(w.id)}" title="${w.mem?"암기함":"미암기"} (누르면 바뀜)">${w.mem?"⭕":"❌"}</button>
       <button class="spk" data-say="${esc(w.word)}" title="발음 듣기">🔊</button>
-      <button class="ed" data-edit="${w.id}" title="수정">✎</button>
-      <button class="x" data-del="${w.id}" title="삭제">✕</button>
+      <button class="ed" data-edit="${esc(w.id)}" title="수정">✎</button>
+      <button class="x" data-del="${esc(w.id)}" title="삭제">✕</button>
     </div>`;}).join("");
   const filts = [["all","전체"],["i1","★"],["i2","★★"],["i3","★★★"],["mem","⭕"],["unmem","❌"]];
   const isOn = v => v==="all" ? (!filtImp && filtMem==="all")
@@ -836,7 +841,8 @@ function bind(){
     ses.answered = i;
     answer(correct);
     render();
-    setTimeout(nextQ, correct?700:1400);
+    const s = ses; // 대기 중 그만두고 새 테스트를 시작해도 이전 타이머가 새 세션을 넘기지 않게
+    setTimeout(()=>{ if(ses===s) nextQ(); }, correct?700:1400);
   });
   const btnCheck = document.getElementById("btnCheck");
   if(btnCheck){
